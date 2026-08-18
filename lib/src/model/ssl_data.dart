@@ -9,7 +9,7 @@ import 'package:reserve/src/exception/fatal_exception.dart';
 part 'ssl_data.g.dart';
 
 @JsonSerializable()
-abstract class SslData {
+class SslData {
   SslData({this.privateKeyPassword, required this.type});
 
   factory SslData.fromJson(Map<String, dynamic> json) {
@@ -36,8 +36,8 @@ abstract class SslData {
   String? privateKeyPassword;
   final String type;
 
-  String get chainPem;
-  String get privateKeyPem;
+  String get chainPem => throw UnimplementedError();
+  String get privateKeyPem => throw UnimplementedError();
 
   Future<SecurityContext> getSecurityContext() async => SecurityContext()
     ..useCertificateChain(chainPem)
