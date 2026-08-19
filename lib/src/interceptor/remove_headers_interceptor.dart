@@ -14,14 +14,17 @@ class RemoveHeadersInterceptor extends Interceptor {
   final Set<String> _headers;
 
   @override
-  ReServeRequest interceptRequest(ReServeRequest request) {
+  (ReServeRequest, ReServeResponse?) interceptRequest(ReServeRequest request) {
     final headers = List<ReServeHeader>.from(request.headers);
     headers.removeWhere((h) => _headers.contains(h.key));
-    return request.copyWith(headers: headers);
+    return (request.copyWith(headers: headers), null);
   }
 
   @override
-  ReServeResponse interceptResponse(ReServeResponse response) {
+  ReServeResponse interceptResponse(
+    ReServeRequest request,
+    ReServeResponse response,
+  ) {
     final headers = List<ReServeHeader>.from(response.headers);
     headers.removeWhere((h) => _headers.contains(h.key));
     return response.copyWith(headers: headers);

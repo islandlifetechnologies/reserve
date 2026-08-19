@@ -1,17 +1,29 @@
+import 'dart:async';
 import 'dart:io';
 
-class Server {
-  SecurityContext getSecurityContext() {
-    // Bind with a secure HTTPS connection
-    final chain = Platform.script
-        .resolve('certificates/server_chain.pem')
-        .toFilePath();
-    final key = Platform.script
-        .resolve('certificates/server_key.pem')
-        .toFilePath();
+import 'package:reserve/reserve.dart';
+import 'package:shelf/shelf.dart';
+import 'package:shelf/shelf_io.dart' as shelf_io;
 
-    return SecurityContext()
-      ..useCertificateChain(chain)
-      ..usePrivateKey(key);
+class Server {
+  Server({required this.config});
+
+  final ServerConfig config;
+
+  Future<HttpServer> serve() async {
+    SecurityContext? security;
+
+    final https = config.https;
+    if (https != null) {
+      security = await https.getSecurityContext();
+    }
+    final server = await shelf_io.serve(
+      _processRequest,
+      config.host,
+      config.port,
+      securityContext: security,
+    );
+
+    return server;
   }
 }

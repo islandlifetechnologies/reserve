@@ -4,5 +4,6 @@ abstract class ResponseInterceptor extends Interceptor {
   ResponseInterceptor(super.data, {required super.config, super.route});
 
   @override
-  ReServeRequest interceptRequest(ReServeRequest request) => request;
+  (ReServeRequest, ReServeResponse?) interceptRequest(ReServeRequest request) =>
+      (request, null);
 }

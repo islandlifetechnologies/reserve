@@ -19,7 +19,10 @@ class CookieResponseInterceptor extends ResponseInterceptor {
   final ReServeRoute _route;
 
   @override
-  ReServeResponse interceptResponse(ReServeResponse response) {
+  ReServeResponse interceptResponse(
+    ReServeRequest request,
+    ReServeResponse response,
+  ) {
     final headers = response.headers.where((h) => h.key == _kHeaderName);
 
     final cookies = <ReServeCookie>[];

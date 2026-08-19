@@ -1,13 +1,12 @@
 import 'dart:typed_data';
 
 import 'package:reserve/reserve.dart';
-import 'package:reserve/src/interceptor/interceptor.dart';
 import 'package:test/test.dart';
 
 void main() {
   group('cookie', () {
     test('single cookie', () {
-      final config = ServerConfig(host: 'example.com', port: 8080);
+      final config = ServerConfig(host: 'example.com', port: 8080, routes: []);
       const cookieStr =
           'user=312085%3A%dfdacmzbjLtridvDFwPlNs4N; path=/bar/baz; '
           'domain=.example.org;  expires=Tue, 17-Aug-2027 23:05:55 GMT; secure;'
@@ -29,7 +28,10 @@ void main() {
         statusCode: 200,
       );
 
-      final result = interceptor.interceptResponse(input);
+      final result = interceptor.interceptResponse(
+        ReServeRequest.empty(),
+        input,
+      );
 
       expect(
         result.headers.firstWhere((h) => h.key == 'set-cookie').value,
@@ -46,7 +48,7 @@ void main() {
     });
 
     test('disallow secure', () {
-      final config = ServerConfig(host: 'example.com', port: 8080);
+      final config = ServerConfig(host: 'example.com', port: 8080, routes: []);
       const cookieStr =
           'user=312085%3A%dfdacmzbjLtridvDFwPlNs4N; path=/bar/baz; '
           'domain=.example.org;  expires=Tue, 17-Aug-2027 23:05:55 GMT; secure;'
@@ -71,7 +73,10 @@ void main() {
         statusCode: 200,
       );
 
-      final result = interceptor.interceptResponse(input);
+      final result = interceptor.interceptResponse(
+        ReServeRequest.empty(),
+        input,
+      );
 
       expect(
         result.headers.firstWhere((h) => h.key == 'set-cookie').value,
@@ -88,7 +93,7 @@ void main() {
     });
 
     test('multiple cookies', () {
-      final config = ServerConfig(host: 'example.com', port: 8080);
+      final config = ServerConfig(host: 'example.com', port: 8080, routes: []);
       const cookieStrs = [
         'user=312085%3A%dfdacmzbjLtridvDFwPlNs4N; path=/bar/baz; '
             'domain=.example.org;  expires=Tue, 17-Aug-2027 23:05:55 GMT; secure;'
@@ -116,7 +121,10 @@ void main() {
         statusCode: 200,
       );
 
-      final result = interceptor.interceptResponse(input);
+      final result = interceptor.interceptResponse(
+        ReServeRequest.empty(),
+        input,
+      );
 
       expect(
         result.headers.where((h) => h.key == 'set-cookie').map((c) => c.value),
@@ -145,7 +153,7 @@ void main() {
   });
   group('redirect', () {
     test('Check redirect', () {
-      final config = ServerConfig(host: 'example.com', port: 8080);
+      final config = ServerConfig(host: 'example.com', port: 8080, routes: []);
       final interceptor = RedirectResponseInterceptor(
         InterceptorData(type: RedirectResponseInterceptor.kType),
         config: config,
@@ -168,7 +176,10 @@ void main() {
         statusCode: 200,
       );
 
-      final result = interceptor.interceptResponse(input);
+      final result = interceptor.interceptResponse(
+        ReServeRequest.empty(),
+        input,
+      );
 
       expect(
         result.headers.firstWhere((h) => h.key == 'location').value,
@@ -181,6 +192,7 @@ void main() {
         host: 'localhost.direct',
         https: SslData(type: ''),
         port: 443,
+        routes: [],
       );
       final interceptor = RedirectResponseInterceptor(
         InterceptorData(type: RedirectResponseInterceptor.kType),
@@ -204,7 +216,10 @@ void main() {
         statusCode: 200,
       );
 
-      final result = interceptor.interceptResponse(input);
+      final result = interceptor.interceptResponse(
+        ReServeRequest.empty(),
+        input,
+      );
 
       expect(
         result.headers.firstWhere((h) => h.key == 'location').value,

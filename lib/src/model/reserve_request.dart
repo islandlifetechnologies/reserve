@@ -12,6 +12,13 @@ class ReServeRequest {
     required this.uri,
   }) : method = method.toUpperCase();
 
+  factory ReServeRequest.empty() => ReServeRequest(
+    bytes: Uint8List(0),
+    headers: const [],
+    method: 'GET',
+    uri: Uri(),
+  );
+
   static Future<ReServeRequest> fromShelfRequest(shelf.Request request) async {
     final method = request.method;
     final uri = request.url;
@@ -49,7 +56,6 @@ class ReServeRequest {
 
   http.Request toHttpRequest() {
     final req = http.Request(method, uri)..bodyBytes = bytes;
-
     req.headers.addAll(ReServeHeader.toMap(headers));
 
     return req;

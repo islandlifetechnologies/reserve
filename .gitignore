@@ -45,6 +45,7 @@ app.*.map.json
 !/packages/flutter_tools/test/data/dart_dependencies_test/**/.packages
 
 lib/generated/
+cert/
 
 # Below this line, don't include in .pubignore
 *.g.dart

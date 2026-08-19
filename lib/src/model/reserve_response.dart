@@ -11,6 +11,9 @@ class ReServeResponse {
     required this.statusCode,
   });
 
+  factory ReServeResponse.empty() =>
+      ReServeResponse(bytes: Uint8List(0), headers: const [], statusCode: 200);
+
   static ReServeResponse fromHttpResponse(http.Response response) {
     final bytes = response.bodyBytes;
     final headers = ReServeHeader.fromHeaders(

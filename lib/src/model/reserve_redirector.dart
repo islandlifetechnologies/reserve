@@ -3,10 +3,10 @@ import 'package:reserve/reserve.dart';
 
 part 'reserve_redirector.g.dart';
 
-@JsonSerializable()
+@JsonSerializable(createToJson: false)
 class ReServeRedirector {
   ReServeRedirector({List<InterceptorData>? interceptors, required this.uri})
-    : interceptors = List.unmodifiable(interceptors ?? []);
+    : interceptors = interceptors ?? const [];
 
   factory ReServeRedirector.fromJson(Map<String, dynamic> json) =>
       _$ReServeRedirectorFromJson(json);
@@ -14,5 +14,20 @@ class ReServeRedirector {
   final List<InterceptorData> interceptors;
   final Uri uri;
 
-  Map<String, dynamic> toJson() => _$ReServeRedirectorToJson(this);
+  @JsonKey(includeFromJson: false)
+  List<Interceptor>? _interceptors;
+
+  List<Interceptor> getInterceptors(ServerConfig config, ReServeRoute route) {
+    final result =
+        _interceptors ??
+        interceptors
+            .map(
+              (data) => Interceptor.create(data, config: config, route: route),
+            )
+            .toList();
+
+    _interceptors = result;
+
+    return result;
+  }
 }

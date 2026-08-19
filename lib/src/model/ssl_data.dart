@@ -2,18 +2,24 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:archive/archive_io.dart';
-import 'package:http/http.dart' as http;
 import 'package:json_annotation/json_annotation.dart';
 import 'package:reserve/src/exception/fatal_exception.dart';
+import 'package:template_expressions/template_expressions.dart';
 
 part 'ssl_data.g.dart';
 
-@JsonSerializable()
+@JsonSerializable(createToJson: false)
 class SslData {
-  SslData({this.privateKeyPassword, required this.type});
+  SslData({
+    this.certChainPassword,
+    this.privateKeyPassword,
+    required this.type,
+  });
 
   factory SslData.fromJson(Map<String, dynamic> json) {
+    json = jsonDecode(Template(jsonEncode(json)).process());
     final type = json['type']?.toString().toLowerCase();
+
     if (type == null) {
       throw FatalException('A SSL configuration requires a type.');
     }
@@ -33,6 +39,9 @@ class SslData {
     };
   }
 
+  @JsonKey(name: 'cert-chain-password')
+  String? certChainPassword;
+  @JsonKey(name: 'private-key-password')
   String? privateKeyPassword;
   final String type;
 
@@ -40,16 +49,21 @@ class SslData {
   String get privateKeyPem => throw UnimplementedError();
 
   Future<SecurityContext> getSecurityContext() async => SecurityContext()
-    ..useCertificateChain(chainPem)
-    ..usePrivateKey(privateKeyPem, password: privateKeyPassword);
-
-  Map<String, dynamic> toJson() => _$SslDataToJson(this);
+    ..useCertificateChainBytes(
+      utf8.encode(chainPem),
+      password: certChainPassword,
+    )
+    ..usePrivateKeyBytes(
+      utf8.encode(privateKeyPem),
+      password: privateKeyPassword,
+    );
 }
 
-@JsonSerializable()
+@JsonSerializable(createToJson: false)
 class SslDataFile extends SslData {
   SslDataFile({
-    required this.chain,
+    required this.certChain,
+    super.certChainPassword,
     super.privateKeyPassword,
     required this.privateKey,
   }) : super(type: kType);
@@ -59,7 +73,10 @@ class SslDataFile extends SslData {
 
   static final kType = 'file';
 
-  final String chain;
+  @JsonKey(name: 'cert-chain')
+  final String certChain;
+
+  @JsonKey(name: 'private-key')
   final String privateKey;
 
   late final String _chainPem;
@@ -72,11 +89,11 @@ class SslDataFile extends SslData {
 
   @override
   Future<SecurityContext> getSecurityContext() {
-    final chainFile = File(chain);
+    final chainFile = File(certChain);
     final privateKeyFile = File(privateKey);
 
     if (!chainFile.existsSync()) {
-      throw FatalException('Cannot find certificate chain file: $chain');
+      throw FatalException('Cannot find certificate chain file: $certChain');
     }
     if (!privateKeyFile.existsSync()) {
       throw FatalException(
@@ -89,28 +106,32 @@ class SslDataFile extends SslData {
 
     return super.getSecurityContext();
   }
-
-  @override
-  Map<String, dynamic> toJson() => _$SslDataFileToJson(this);
 }
 
-@JsonSerializable()
+@JsonSerializable(createToJson: false)
 class SslDataZip extends SslData {
   SslDataZip({
-    this.chainName = 'localhost.direct.OP.crt',
+    this.certChainName = 'localhost.direct.OP.crt',
+    super.certChainPassword,
     super.privateKeyPassword,
+    required this.path,
     this.privateKeyName = 'localhost.direct.OP.key',
-    this.url = 'https://aka.re/localhost',
+    this.zipPassword,
   }) : super(type: kType);
 
   factory SslDataZip.fromJson(Map<String, dynamic> json) =>
       _$SslDataZipFromJson(json);
 
-  static final kType = 'file';
+  static final kType = 'zip';
 
-  final String chainName;
+  @JsonKey(name: 'cert-chain-name')
+  final String certChainName;
+  final String path;
+  @JsonKey(name: 'private-key-name')
   final String privateKeyName;
-  final String url;
+
+  @JsonKey(name: 'zip-password')
+  final String? zipPassword;
 
   late final String _chainPem;
   late final String _privateKeyPem;
@@ -122,42 +143,24 @@ class SslDataZip extends SslData {
 
   @override
   Future<SecurityContext> getSecurityContext() async {
-    final uri = Uri.tryParse(url);
+    final file = File(path);
 
-    if (uri == null) {
-      throw FatalException('Cannot locate certificate ZIP file: $url');
+    if (!file.existsSync()) {
+      throw FatalException('Cannot locate certificate ZIP file: $path');
     }
 
-    late final Archive archive;
-    try {
-      final filePath = uri.toFilePath();
-      final file = File(filePath);
-
-      if (!file.existsSync()) {
-        throw FatalException(
-          ('Certificate ZIP file does not exist: $filePath'),
-        );
-      }
-      archive = ZipDecoder().decodeBytes(file.readAsBytesSync());
-    } catch (_) {
-      // it's not a File path...
-
-      final response = await http.get(uri);
-      if (response.statusCode >= 400) {
-        throw FatalException(
-          'Received status code: ${response.statusCode} from URL: $uri',
-        );
-      }
-      archive = ZipDecoder().decodeBytes(response.bodyBytes);
-    }
+    final archive = ZipDecoder().decodeBytes(
+      file.readAsBytesSync(),
+      password: zipPassword,
+    );
 
     final chainFile = archive.files
-        .where((f) => f.isFile && f.name.endsWith(chainName))
+        .where((f) => f.isFile && f.name.endsWith(certChainName))
         .firstOrNull;
 
     if (chainFile == null) {
       throw FatalException(
-        'Cannot find file named "$chainName" in ZIP file: $url',
+        'Cannot find file named "$certChainName" in ZIP file: $path',
       );
     }
 
@@ -167,7 +170,7 @@ class SslDataZip extends SslData {
 
     if (privateKeyFile == null) {
       throw FatalException(
-        'Cannot find file named "$privateKeyFile" in ZIP file: $url',
+        'Cannot find file named "$privateKeyFile" in ZIP file: $path',
       );
     }
 
@@ -176,9 +179,6 @@ class SslDataZip extends SslData {
 
     return super.getSecurityContext();
   }
-
-  @override
-  Map<String, dynamic> toJson() => _$SslDataZipToJson(this);
 }
 
 enum SslDataType { file, zip }

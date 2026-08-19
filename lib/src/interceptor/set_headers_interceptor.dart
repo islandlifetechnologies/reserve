@@ -17,12 +17,14 @@ class SetHeadersInterceptor extends Interceptor {
   final Map<String, String> _headers;
 
   @override
-  ReServeRequest interceptRequest(ReServeRequest request) =>
-      request.copyWith(headers: _updateHeaders(request.headers));
+  (ReServeRequest, ReServeResponse?) interceptRequest(ReServeRequest request) =>
+      (request.copyWith(headers: _updateHeaders(request.headers)), null);
 
   @override
-  ReServeResponse interceptResponse(ReServeResponse response) =>
-      response.copyWith(headers: _updateHeaders(response.headers));
+  ReServeResponse interceptResponse(
+    ReServeRequest request,
+    ReServeResponse response,
+  ) => response.copyWith(headers: _updateHeaders(response.headers));
 
   List<ReServeHeader> _updateHeaders(List<ReServeHeader> headers) {
     headers = List<ReServeHeader>.from(headers);

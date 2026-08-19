@@ -41,6 +41,26 @@ Interceptor.registry['${data.type}'] = MyCustomInterceptor.new;
     return builder(data, config: config, route: route);
   }
 
+  static T? maybeParseNum<T>(dynamic input) {
+    dynamic result;
+
+    if (input is String) {
+      result = double.tryParse(input);
+    } else if (input is num) {
+      result = input;
+    }
+
+    if (result is num) {
+      if (T == int) {
+        result = result.toInt();
+      } else if (T is double) {
+        result = result.toDouble();
+      }
+    }
+
+    return result;
+  }
+
   static bool parseBool(dynamic input, {bool defaultsTo = false}) {
     var result = defaultsTo;
 
@@ -53,8 +73,11 @@ Interceptor.registry['${data.type}'] = MyCustomInterceptor.new;
     return result;
   }
 
-  ReServeRequest interceptRequest(ReServeRequest request);
-  ReServeResponse interceptResponse(ReServeResponse response);
+  (ReServeRequest, ReServeResponse?) interceptRequest(ReServeRequest request);
+  ReServeResponse interceptResponse(
+    ReServeRequest request,
+    ReServeResponse response,
+  );
 
   String replaceUrl(String url, {required ReServeRoute route}) {
     final input = Uri.parse(url);
