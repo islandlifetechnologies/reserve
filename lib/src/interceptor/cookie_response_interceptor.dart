@@ -4,19 +4,16 @@ import 'package:reserve/reserve.dart';
 
 class CookieResponseInterceptor extends ResponseInterceptor {
   CookieResponseInterceptor(super.data, {required super.config, super.route})
-    : assert(route != null),
-      allowSecure = Interceptor.parseBool(
+    : allowSecure = Interceptor.parseBool(
         data.params[kParamAllowSecure],
         defaultsTo: true,
-      ),
-      _route = route!;
+      );
 
   static const kParamAllowSecure = 'allow-secure';
   static const kType = 'cookie';
   static const _kHeaderName = 'set-cookie';
 
   final bool allowSecure;
-  final ReServeRoute _route;
 
   @override
   ReServeResponse interceptResponse(
@@ -34,7 +31,6 @@ class CookieResponseInterceptor extends ResponseInterceptor {
       cookies.add(
         cookie.copyWith(
           domain: cookie.domain == null ? null : '.${config.host}',
-          path: _route.listen.path,
           secure: allowSecure ? cookie.secure : false,
         ),
       );

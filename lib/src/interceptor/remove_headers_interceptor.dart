@@ -8,6 +8,14 @@ class RemoveHeadersInterceptor extends Interceptor {
         ),
       );
 
+  factory RemoveHeadersInterceptor.direct({
+    required ServerConfig config,
+    required Iterable<String> headers,
+  }) => RemoveHeadersInterceptor(
+    InterceptorData(type: kType, params: {kParamHeaders: headers.toList()}),
+    config: config,
+  );
+
   static const kParamHeaders = 'headers';
   static const kType = 'remove-headers';
 

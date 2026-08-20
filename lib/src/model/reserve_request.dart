@@ -10,7 +10,9 @@ class ReServeRequest {
     required this.headers,
     required String method,
     required this.uri,
-  }) : method = method.toUpperCase();
+    DateTime? timestamp,
+  }) : method = method.toUpperCase(),
+       timestamp = DateTime.now();
 
   factory ReServeRequest.empty() => ReServeRequest(
     bytes: Uint8List(0),
@@ -40,17 +42,20 @@ class ReServeRequest {
   final Uint8List bytes;
   final List<ReServeHeader> headers;
   final String method;
+  final DateTime timestamp;
   final Uri uri;
 
   ReServeRequest copyWith({
     Uint8List? bytes,
     List<ReServeHeader>? headers,
     String? method,
+    DateTime? timestamp,
     Uri? uri,
   }) => ReServeRequest(
     bytes: bytes ?? this.bytes,
     headers: headers ?? this.headers,
     method: method ?? this.method,
+    timestamp: timestamp ?? this.timestamp,
     uri: uri ?? this.uri,
   );
 

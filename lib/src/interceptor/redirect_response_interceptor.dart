@@ -5,6 +5,15 @@ class RedirectResponseInterceptor extends ResponseInterceptor {
     : assert(route != null),
       _route = route!;
 
+  factory RedirectResponseInterceptor.direct({
+    required ServerConfig config,
+    required ReServeRoute route,
+  }) => RedirectResponseInterceptor(
+    InterceptorData(type: kType),
+    config: config,
+    route: route,
+  );
+
   static const kType = 'redirect';
   static const _kHeaderName = 'location';
 

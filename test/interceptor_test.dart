@@ -6,7 +6,7 @@ import 'package:test/test.dart';
 void main() {
   group('cookie', () {
     test('single cookie', () {
-      final config = ServerConfig(host: 'example.com', port: 8080, routes: []);
+      final config = ServerConfig(host: 'example.com', port: 8080, routes: {});
       const cookieStr =
           'user=312085%3A%dfdacmzbjLtridvDFwPlNs4N; path=/bar/baz; '
           'domain=.example.org;  expires=Tue, 17-Aug-2027 23:05:55 GMT; secure;'
@@ -15,10 +15,8 @@ void main() {
         InterceptorData(type: CookieResponseInterceptor.kType),
         config: config,
         route: ReServeRoute(
-          listen: ReServeListener(path: '/foo'),
-          redirect: ReServeRedirector(
-            uri: Uri.parse('https://www.example.org/bar'),
-          ),
+          path: '/foo',
+          redirect: Uri.parse('https://www.example.org/bar'),
         ),
       );
 
@@ -48,7 +46,7 @@ void main() {
     });
 
     test('disallow secure', () {
-      final config = ServerConfig(host: 'example.com', port: 8080, routes: []);
+      final config = ServerConfig(host: 'example.com', port: 8080, routes: {});
       const cookieStr =
           'user=312085%3A%dfdacmzbjLtridvDFwPlNs4N; path=/bar/baz; '
           'domain=.example.org;  expires=Tue, 17-Aug-2027 23:05:55 GMT; secure;'
@@ -60,10 +58,8 @@ void main() {
         ),
         config: config,
         route: ReServeRoute(
-          listen: ReServeListener(path: '/foo'),
-          redirect: ReServeRedirector(
-            uri: Uri.parse('https://www.example.org/bar'),
-          ),
+          path: '/foo',
+          redirect: Uri.parse('https://www.example.org/bar'),
         ),
       );
 
@@ -93,7 +89,7 @@ void main() {
     });
 
     test('multiple cookies', () {
-      final config = ServerConfig(host: 'example.com', port: 8080, routes: []);
+      final config = ServerConfig(host: 'example.com', port: 8080, routes: {});
       const cookieStrs = [
         'user=312085%3A%dfdacmzbjLtridvDFwPlNs4N; path=/bar/baz; '
             'domain=.example.org;  expires=Tue, 17-Aug-2027 23:05:55 GMT; secure;'
@@ -106,10 +102,8 @@ void main() {
         InterceptorData(type: CookieResponseInterceptor.kType),
         config: config,
         route: ReServeRoute(
-          listen: ReServeListener(path: '/foo'),
-          redirect: ReServeRedirector(
-            uri: Uri.parse('https://www.example.org/bar'),
-          ),
+          path: '/foo',
+          redirect: Uri.parse('https://www.example.org/bar'),
         ),
       );
 
@@ -153,15 +147,13 @@ void main() {
   });
   group('redirect', () {
     test('Check redirect', () {
-      final config = ServerConfig(host: 'example.com', port: 8080, routes: []);
+      final config = ServerConfig(host: 'example.com', port: 8080, routes: {});
       final interceptor = RedirectResponseInterceptor(
         InterceptorData(type: RedirectResponseInterceptor.kType),
         config: config,
         route: ReServeRoute(
-          listen: ReServeListener(path: '/foo'),
-          redirect: ReServeRedirector(
-            uri: Uri.parse('https://www.example.com/foo'),
-          ),
+          path: '/foo',
+          redirect: Uri.parse('https://www.example.com/foo'),
         ),
       );
 
@@ -192,16 +184,14 @@ void main() {
         host: 'localhost.direct',
         https: SslData(type: ''),
         port: 443,
-        routes: [],
+        routes: {},
       );
       final interceptor = RedirectResponseInterceptor(
         InterceptorData(type: RedirectResponseInterceptor.kType),
         config: config,
         route: ReServeRoute(
-          listen: ReServeListener(path: '/foo'),
-          redirect: ReServeRedirector(
-            uri: Uri.parse('https://www.example.com/foo'),
-          ),
+          path: '/foo',
+          redirect: Uri.parse('https://www.example.com/foo'),
         ),
       );
 

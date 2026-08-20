@@ -1,3 +1,4 @@
+import 'package:logging/logging.dart';
 import 'package:reserve/reserve.dart';
 
 typedef InterceptorBuilder =
@@ -8,17 +9,25 @@ typedef InterceptorBuilder =
     });
 
 abstract class Interceptor {
-  Interceptor(this.data, {required this.config, this.route});
+  Interceptor(this.data, {required this.config, this.route})
+    : logger = Logger(
+        '${(route?.logger ?? config.logger).name} [${data.type}]',
+      ),
+      type = data.type;
 
   static final Map<String, InterceptorBuilder> registry = {
     CookieResponseInterceptor.kType: CookieResponseInterceptor.new,
+    CorsInterceptor.kType: CorsInterceptor.new,
     RedirectResponseInterceptor.kType: RedirectResponseInterceptor.new,
     RemoveHeadersInterceptor.kType: RemoveHeadersInterceptor.new,
+    SetHeadersInterceptor.kType: SetHeadersInterceptor.new,
   };
 
   final ServerConfig config;
   final InterceptorData data;
+  final Logger logger;
   final ReServeRoute? route;
+  final String type;
 
   static Interceptor create(
     InterceptorData data, {
@@ -74,16 +83,16 @@ Interceptor.registry['${data.type}'] = MyCustomInterceptor.new;
   }
 
   (ReServeRequest, ReServeResponse?) interceptRequest(ReServeRequest request);
+
   ReServeResponse interceptResponse(
     ReServeRequest request,
     ReServeResponse response,
   );
 
   String replaceUrl(String url, {required ReServeRoute route}) {
-    final input = Uri.parse(url);
-    final routeTo = route.redirect.uri;
+    final routeTo = route.redirect;
 
-    var path = input.path.replaceFirst(routeTo.path, route.listen.path);
+    var path = routeTo.path;
     if (!path.startsWith('/')) {
       path = '/$path';
     }

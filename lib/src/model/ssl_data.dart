@@ -33,16 +33,14 @@ class SslData {
       );
     }
 
-    return switch (sslType) {
-      SslDataType.file => SslDataFile.fromJson(json),
-      SslDataType.zip => SslDataZip.fromJson(json),
-    };
+    return sslType.builder(json);
   }
 
   @JsonKey(name: 'cert-chain-password')
   String? certChainPassword;
   @JsonKey(name: 'private-key-password')
   String? privateKeyPassword;
+
   final String type;
 
   String get chainPem => throw UnimplementedError();
@@ -106,6 +104,32 @@ class SslDataFile extends SslData {
 
     return super.getSecurityContext();
   }
+}
+
+@JsonSerializable(createToJson: false)
+class SslDataInline extends SslData {
+  SslDataInline({
+    required this.certChain,
+    super.certChainPassword,
+    super.privateKeyPassword,
+    required this.privateKey,
+  }) : super(type: kType);
+
+  factory SslDataInline.fromJson(Map<String, dynamic> json) =>
+      _$SslDataInlineFromJson(json);
+
+  static final kType = 'inline';
+
+  @JsonKey(name: 'cert-chain')
+  final String certChain;
+
+  @JsonKey(name: 'private-key')
+  final String privateKey;
+
+  @override
+  String get chainPem => certChain;
+  @override
+  String get privateKeyPem => privateKey;
 }
 
 @JsonSerializable(createToJson: false)
@@ -181,4 +205,12 @@ class SslDataZip extends SslData {
   }
 }
 
-enum SslDataType { file, zip }
+enum SslDataType {
+  file(SslDataFile.fromJson),
+  inline(SslDataInline.fromJson),
+  zip(SslDataZip.fromJson);
+
+  const SslDataType(this.builder);
+
+  final SslData Function(Map<String, dynamic> json) builder;
+}

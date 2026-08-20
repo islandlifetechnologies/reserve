@@ -11,6 +11,14 @@ class SetHeadersInterceptor extends Interceptor {
         ),
       );
 
+  factory SetHeadersInterceptor.direct({
+    required ServerConfig config,
+    required Map<String, String> headers,
+  }) => SetHeadersInterceptor(
+    InterceptorData(type: kType, params: {kParamHeaders: headers}),
+    config: config,
+  );
+
   static const kParamHeaders = 'headers';
   static const kType = 'set-headers';
 
