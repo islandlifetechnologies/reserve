@@ -7,11 +7,12 @@ import 'package:shelf/shelf.dart' as shelf;
 class ReServeRequest {
   ReServeRequest({
     required this.bytes,
-    required this.headers,
+    required List<ReServeHeader> headers,
     required String method,
     required this.uri,
     DateTime? timestamp,
-  }) : method = method.toUpperCase(),
+  }) : headers = ReServeHeaders(headers),
+       method = method.toUpperCase(),
        timestamp = DateTime.now();
 
   factory ReServeRequest.empty() => ReServeRequest(
@@ -24,7 +25,7 @@ class ReServeRequest {
   static Future<ReServeRequest> fromShelfRequest(shelf.Request request) async {
     final method = request.method;
     final uri = request.url;
-    final headers = ReServeHeader.fromHeaders(request.headersAll);
+    final headers = ReServeHeaders.fromHeaders(request.headersAll);
 
     final bytes = await request
         .read()
@@ -33,17 +34,19 @@ class ReServeRequest {
 
     return ReServeRequest(
       bytes: bytes,
-      headers: headers,
+      headers: headers.all,
       method: method,
       uri: uri,
     );
   }
 
   final Uint8List bytes;
-  final List<ReServeHeader> headers;
+  final ReServeHeaders headers;
   final String method;
   final DateTime timestamp;
   final Uri uri;
+
+  String get path => '/${uri.path}';
 
   ReServeRequest copyWith({
     Uint8List? bytes,
@@ -53,7 +56,7 @@ class ReServeRequest {
     Uri? uri,
   }) => ReServeRequest(
     bytes: bytes ?? this.bytes,
-    headers: headers ?? this.headers,
+    headers: headers ?? this.headers.all,
     method: method ?? this.method,
     timestamp: timestamp ?? this.timestamp,
     uri: uri ?? this.uri,
@@ -61,7 +64,7 @@ class ReServeRequest {
 
   http.Request toHttpRequest() {
     final req = http.Request(method, uri)..bodyBytes = bytes;
-    req.headers.addAll(ReServeHeader.toMap(headers));
+    req.headers.addAll(headers.toMap());
 
     return req;
   }

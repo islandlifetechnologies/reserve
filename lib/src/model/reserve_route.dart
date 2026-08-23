@@ -14,6 +14,7 @@ class ReServeRoute {
     this.origin,
     String? path,
     required this.redirect,
+    this.redirectIp,
   }) {
     if (path != null) {
       this.path = path;
@@ -28,6 +29,7 @@ class ReServeRoute {
   final String? name;
   final Uri? origin;
   final Uri redirect;
+  final String? redirectIp;
 
   @JsonKey(includeFromJson: false)
   List<Interceptor>? _interceptors;

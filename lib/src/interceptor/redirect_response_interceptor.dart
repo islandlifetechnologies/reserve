@@ -1,20 +1,15 @@
 import 'package:reserve/reserve.dart';
 
 class RedirectResponseInterceptor extends ResponseInterceptor {
-  RedirectResponseInterceptor(super.data, {required super.config, super.route})
-    : assert(route != null),
-      _route = route!;
+  RedirectResponseInterceptor({required super.config, required this._route})
+    : super(InterceptorType.redirect, route: _route);
 
-  factory RedirectResponseInterceptor.direct({
+  factory RedirectResponseInterceptor.builder({
     required ServerConfig config,
-    required ReServeRoute route,
-  }) => RedirectResponseInterceptor(
-    InterceptorData(type: kType),
-    config: config,
-    route: route,
-  );
+    Map<String, dynamic>? params,
+    ReServeRoute? route,
+  }) => RedirectResponseInterceptor(config: config, route: route!);
 
-  static const kType = 'redirect';
   static const _kHeaderName = 'location';
 
   final ReServeRoute _route;
@@ -24,9 +19,9 @@ class RedirectResponseInterceptor extends ResponseInterceptor {
     ReServeRequest request,
     ReServeResponse response,
   ) {
-    final headers = response.headers.where((h) => h.key == _kHeaderName);
+    final headers = response.headers.all.where((h) => h.key == _kHeaderName);
 
-    final result = List<ReServeHeader>.from(response.headers)
+    final result = List<ReServeHeader>.from(response.headers.all)
       ..removeWhere((h) => h.key == _kHeaderName)
       ..addAll(
         headers.map(

@@ -1,4 +1,5 @@
 import 'package:json_annotation/json_annotation.dart';
+import 'package:reserve/src/interceptor/interceptor.dart';
 
 part 'interceptor_data.g.dart';
 
@@ -9,7 +10,7 @@ class InterceptorData {
   factory InterceptorData.fromJson(Map<String, dynamic> json) =>
       _$InterceptorDataFromJson(json);
 
-  final String type;
+  final InterceptorType type;
 
   @JsonKey(name: 'with')
   final Map<String, dynamic> params;

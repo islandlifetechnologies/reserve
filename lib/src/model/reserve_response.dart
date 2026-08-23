@@ -8,17 +8,18 @@ import 'package:shelf/shelf.dart' as shelf;
 class ReServeResponse {
   ReServeResponse({
     required this.bytes,
-    required this.headers,
+    required Iterable<ReServeHeader> headers,
     required this.statusCode,
     DateTime? timestamp,
-  }) : timestamp = timestamp ?? DateTime.now();
+  }) : headers = ReServeHeaders(headers),
+       timestamp = timestamp ?? DateTime.now();
 
   factory ReServeResponse.empty() =>
       ReServeResponse(bytes: Uint8List(0), headers: const [], statusCode: 200);
 
   static ReServeResponse fromHttpResponse(http.Response response) {
     final bytes = response.bodyBytes;
-    final headers = ReServeHeader.fromHeaders(
+    final headers = ReServeHeaders.fromHeaders(
       response.headers.map((key, value) {
         // The set-cookie header is a bit of a pain with the HTTP package
         // because it blindly joins multiple headers with a comma, but the
@@ -40,13 +41,13 @@ class ReServeResponse {
 
     return ReServeResponse(
       bytes: bytes,
-      headers: headers,
+      headers: headers.all,
       statusCode: response.statusCode,
     );
   }
 
   final Uint8List bytes;
-  final List<ReServeHeader> headers;
+  final ReServeHeaders headers;
   final int statusCode;
   final DateTime timestamp;
 
@@ -57,14 +58,11 @@ class ReServeResponse {
     DateTime? timestamp,
   }) => ReServeResponse(
     bytes: bytes ?? this.bytes,
-    headers: headers ?? this.headers,
+    headers: headers ?? this.headers.all,
     statusCode: statusCode ?? this.statusCode,
     timestamp: timestamp ?? this.timestamp,
   );
 
-  shelf.Response toShelfResponse() => shelf.Response(
-    statusCode,
-    body: bytes,
-    headers: ReServeHeader.toMapList(headers),
-  );
+  shelf.Response toShelfResponse() =>
+      shelf.Response(statusCode, body: bytes, headers: headers.toMapList());
 }

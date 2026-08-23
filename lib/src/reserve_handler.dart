@@ -24,18 +24,23 @@ class ReServeHandler {
   late final _logger = route.logger;
 
   late final _defaultInterceptors = [
-    RemoveHeadersInterceptor.direct(
+    RemoveHeadersInterceptor(
       config: config,
-      headers: ['content-encoding', 'content-length', 'transfer-encoding'],
+      headers: [
+        'content-encoding',
+        'content-length',
+        'referer',
+        'transfer-encoding',
+      ],
     ),
-    SetHeadersInterceptor.direct(
+    SetHeadersInterceptor(
       config: config,
       headers: {
         'host':
             '${route.redirect.host}${[443, 80].contains(route.redirect.port) ? '' : ':${route.redirect.port}'}',
       },
     ),
-    RedirectResponseInterceptor.direct(config: config, route: route),
+    RedirectResponseInterceptor(config: config, route: route),
   ];
 
   /// The path to check against.  The past must not start with a '/' and if it
@@ -44,7 +49,6 @@ class ReServeHandler {
 
   Future<Response> process(Request request) async {
     try {
-      _logger.finer('Request received.');
       var req = await ReServeRequest.fromShelfRequest(request);
       ReServeResponse? res;
 
@@ -54,8 +58,10 @@ class ReServeHandler {
         route.getInterceptors(config),
       ]) {
         for (final interceptor in interceptors) {
-          interceptor.logger.fine('interceptRequest');
-          (req, res) = interceptor.interceptRequest(req);
+          interceptor.logger.config(
+            'interceptRequest: ${interceptor.type.name}',
+          );
+          (req, res) = await interceptor.interceptRequest(req);
 
           if (res != null) {
             return res.toShelfResponse();
@@ -74,31 +80,28 @@ class ReServeHandler {
       if (redirectPath.startsWith('/')) {
         redirectPath = redirectPath.substring(1);
       }
+      redirectPath = '${route.redirect.path}/$redirectPath';
+      if (redirectPath.startsWith('/')) {
+        redirectPath = redirectPath.substring(1);
+      }
       final uri = Uri.parse(
         '${route.redirect.scheme}://${route.redirect.host}${[80, 443].contains(route.redirect.port) ? '' : ':${route.redirect.port}'}/$redirectPath',
       );
       response = await switch (req.method) {
-        'DELETE' => client.delete(
-          uri,
-          headers: ReServeHeader.toMap(req.headers),
-        ),
-        'GET' => client.get(uri, headers: ReServeHeader.toMap(req.headers)),
-        'HEAD' => client.head(uri, headers: ReServeHeader.toMap(req.headers)),
+        'DELETE' => client.delete(uri, headers: req.headers.toMap()),
+        'GET' => client.get(uri, headers: req.headers.toMap()),
+        'HEAD' => client.head(uri, headers: req.headers.toMap()),
         'PATCH' => client.patch(
           uri,
           body: req.bytes,
-          headers: ReServeHeader.toMap(req.headers),
+          headers: req.headers.toMap(),
         ),
         'POST' => client.post(
           uri,
           body: req.bytes,
-          headers: ReServeHeader.toMap(req.headers),
+          headers: req.headers.toMap(),
         ),
-        'PUT' => client.put(
-          uri,
-          body: req.bytes,
-          headers: ReServeHeader.toMap(req.headers),
-        ),
+        'PUT' => client.put(uri, body: req.bytes, headers: req.headers.toMap()),
         _ => throw ReServeException(body: 'Unsupported method: ${req.method}'),
       };
 
@@ -109,8 +112,10 @@ class ReServeHandler {
         route.getInterceptors(config),
       ]) {
         for (final interceptor in interceptors) {
-          interceptor.logger.fine('interceptResponse');
-          res = interceptor.interceptResponse(req, res!);
+          interceptor.logger.config(
+            'interceptResponse: ${interceptor.type.name}',
+          );
+          res = await interceptor.interceptResponse(req, res!);
         }
       }
 
@@ -118,7 +123,9 @@ class ReServeHandler {
         throw ReServeException();
       }
 
-      _logger.info('${route.redirect.path} [${res.statusCode}]');
+      _logger.info(
+        '[${res.statusCode}] ${req.path} -- ${(res.timestamp.millisecondsSinceEpoch - req.timestamp.millisecondsSinceEpoch) / 1000.0}s',
+      );
       final sRes = res.toShelfResponse();
 
       return sRes;

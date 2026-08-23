@@ -1,29 +1,28 @@
 import 'package:reserve/reserve.dart';
 
 class RemoveHeadersInterceptor extends Interceptor {
-  RemoveHeadersInterceptor(super.data, {required super.config, super.route})
+  RemoveHeadersInterceptor({required super.config, required Iterable headers})
     : _headers = Set<String>.from(
-        (data.params[kParamHeaders] as List? ?? const []).map(
-          (e) => e.toString().toLowerCase(),
-        ),
-      );
+        headers.map((e) => e.toString().toLowerCase()),
+      ),
+      super(InterceptorType.removeHeaders);
 
-  factory RemoveHeadersInterceptor.direct({
+  factory RemoveHeadersInterceptor.builder({
     required ServerConfig config,
-    required Iterable<String> headers,
+    Map<String, dynamic>? params,
+    ReServeRoute? route,
   }) => RemoveHeadersInterceptor(
-    InterceptorData(type: kType, params: {kParamHeaders: headers.toList()}),
     config: config,
+    headers: params!['headers'] as Iterable,
   );
 
   static const kParamHeaders = 'headers';
-  static const kType = 'remove-headers';
 
   final Set<String> _headers;
 
   @override
   (ReServeRequest, ReServeResponse?) interceptRequest(ReServeRequest request) {
-    final headers = List<ReServeHeader>.from(request.headers);
+    final headers = List<ReServeHeader>.from(request.headers.all);
     headers.removeWhere((h) => _headers.contains(h.key));
     return (request.copyWith(headers: headers), null);
   }
@@ -33,7 +32,7 @@ class RemoveHeadersInterceptor extends Interceptor {
     ReServeRequest request,
     ReServeResponse response,
   ) {
-    final headers = List<ReServeHeader>.from(response.headers);
+    final headers = List<ReServeHeader>.from(response.headers.all);
     headers.removeWhere((h) => _headers.contains(h.key));
     return response.copyWith(headers: headers);
   }

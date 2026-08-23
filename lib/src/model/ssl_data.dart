@@ -36,9 +36,9 @@ class SslData {
     return sslType.builder(json);
   }
 
-  @JsonKey(name: 'cert-chain-password')
+  @JsonKey(name: 'certpass')
   String? certChainPassword;
-  @JsonKey(name: 'private-key-password')
+  @JsonKey(name: 'keypass')
   String? privateKeyPassword;
 
   final String type;
@@ -71,10 +71,10 @@ class SslDataFile extends SslData {
 
   static final kType = 'file';
 
-  @JsonKey(name: 'cert-chain')
+  @JsonKey(name: 'certfile')
   final String certChain;
 
-  @JsonKey(name: 'private-key')
+  @JsonKey(name: 'keyfile')
   final String privateKey;
 
   late final String _chainPem;
@@ -120,10 +120,10 @@ class SslDataInline extends SslData {
 
   static final kType = 'inline';
 
-  @JsonKey(name: 'cert-chain')
+  @JsonKey(name: 'cert')
   final String certChain;
 
-  @JsonKey(name: 'private-key')
+  @JsonKey(name: 'key')
   final String privateKey;
 
   @override
@@ -148,13 +148,13 @@ class SslDataZip extends SslData {
 
   static final kType = 'zip';
 
-  @JsonKey(name: 'cert-chain-name')
+  @JsonKey(name: 'certfile')
   final String certChainName;
   final String path;
-  @JsonKey(name: 'private-key-name')
+  @JsonKey(name: 'keyfile')
   final String privateKeyName;
 
-  @JsonKey(name: 'zip-password')
+  @JsonKey(name: 'zippass')
   final String? zipPassword;
 
   late final String _chainPem;

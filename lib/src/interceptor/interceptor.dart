@@ -1,54 +1,64 @@
+import 'dart:async';
+
+import 'package:json_annotation/json_annotation.dart';
 import 'package:logging/logging.dart';
 import 'package:reserve/reserve.dart';
 
 typedef InterceptorBuilder =
-    Interceptor Function(
-      InterceptorData data, {
+    Interceptor Function({
       required ServerConfig config,
+      Map<String, dynamic>? params,
       ReServeRoute? route,
     });
 
-abstract class Interceptor {
-  Interceptor(this.data, {required this.config, this.route})
-    : logger = Logger(
-        '${(route?.logger ?? config.logger).name} [${data.type}]',
-      ),
-      type = data.type;
+enum InterceptorType {
+  cache('cache', CacheInterceptor.builder),
+  cookie('cookie', CookieResponseInterceptor.builder),
+  cors('cors', CorsInterceptor.builder),
+  redirect('redirect', RedirectResponseInterceptor.builder),
 
-  static final Map<String, InterceptorBuilder> registry = {
-    CookieResponseInterceptor.kType: CookieResponseInterceptor.new,
-    CorsInterceptor.kType: CorsInterceptor.new,
-    RedirectResponseInterceptor.kType: RedirectResponseInterceptor.new,
-    RemoveHeadersInterceptor.kType: RemoveHeadersInterceptor.new,
-    SetHeadersInterceptor.kType: SetHeadersInterceptor.new,
-  };
+  @JsonValue('remove-headers')
+  removeHeaders('remove-headers', RemoveHeadersInterceptor.builder),
+
+  @JsonValue('replace-body')
+  replaceBody('replace-body', ReplaceBodyInterceptor.builder),
+
+  @JsonValue('replace-headers')
+  replaceHeaders('replace-headers', ReplaceHeadersInterceptor.builder),
+
+  @JsonValue('set-headers')
+  setHeaders('set-headers', SetHeadersInterceptor.builder),
+
+  @JsonValue('set-response')
+  setResponse('set-response', SetResponseRequestInterceptor.builder);
+
+  const InterceptorType(this.key, this.builder);
+
+  final InterceptorBuilder builder;
+  final String key;
+}
+
+abstract class Interceptor {
+  Interceptor(
+    this.type, {
+    required this.config,
+    this.params = const {},
+    this.route,
+  }) : logger = Logger(
+         '${(route?.logger ?? config.logger).name} [${type.key}]',
+       );
 
   final ServerConfig config;
-  final InterceptorData data;
   final Logger logger;
+  final Map<String, dynamic> params;
   final ReServeRoute? route;
-  final String type;
+  final InterceptorType type;
 
   static Interceptor create(
     InterceptorData data, {
     required ServerConfig config,
     ReServeRoute? route,
-  }) {
-    final builder = registry[data.type];
-    if (builder == null) {
-      throw FatalException('''
-Interceptor not found for type: [${data.type}]
-
-If this is a custom interceptor, be sure to register the interceptor on the
-registry.  For example:
-
-// Register a custom interceptor
-Interceptor.registry['${data.type}'] = MyCustomInterceptor.new;
-''');
-    }
-
-    return builder(data, config: config, route: route);
-  }
+  }) => data.type.builder(config: config, params: data.params, route: route);
 
   static T? maybeParseNum<T>(dynamic input) {
     dynamic result;
@@ -82,9 +92,11 @@ Interceptor.registry['${data.type}'] = MyCustomInterceptor.new;
     return result;
   }
 
-  (ReServeRequest, ReServeResponse?) interceptRequest(ReServeRequest request);
+  FutureOr<(ReServeRequest, ReServeResponse?)> interceptRequest(
+    ReServeRequest request,
+  );
 
-  ReServeResponse interceptResponse(
+  FutureOr<ReServeResponse> interceptResponse(
     ReServeRequest request,
     ReServeResponse response,
   );

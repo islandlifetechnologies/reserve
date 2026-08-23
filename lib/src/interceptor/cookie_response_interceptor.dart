@@ -3,14 +3,22 @@ import 'dart:io';
 import 'package:reserve/reserve.dart';
 
 class CookieResponseInterceptor extends ResponseInterceptor {
-  CookieResponseInterceptor(super.data, {required super.config, super.route})
-    : allowSecure = Interceptor.parseBool(
-        data.params[kParamAllowSecure],
-        defaultsTo: true,
-      );
+  CookieResponseInterceptor({this.allowSecure = true, required super.config})
+    : super(InterceptorType.cookie);
+
+  factory CookieResponseInterceptor.builder({
+    required ServerConfig config,
+    Map<String, dynamic>? params,
+    ReServeRoute? route,
+  }) => CookieResponseInterceptor(
+    config: config,
+    allowSecure: Interceptor.parseBool(
+      params?[kParamAllowSecure],
+      defaultsTo: true,
+    ),
+  );
 
   static const kParamAllowSecure = 'allow-secure';
-  static const kType = 'cookie';
   static const _kHeaderName = 'set-cookie';
 
   final bool allowSecure;
@@ -20,7 +28,7 @@ class CookieResponseInterceptor extends ResponseInterceptor {
     ReServeRequest request,
     ReServeResponse response,
   ) {
-    final headers = response.headers.where((h) => h.key == _kHeaderName);
+    final headers = response.headers.all.where((h) => h.key == _kHeaderName);
 
     final cookies = <ReServeCookie>[];
 
@@ -36,7 +44,7 @@ class CookieResponseInterceptor extends ResponseInterceptor {
       );
     }
 
-    final result = List<ReServeHeader>.from(response.headers)
+    final result = List<ReServeHeader>.from(response.headers.all)
       ..removeWhere((h) => h.key == _kHeaderName)
       ..addAll(
         cookies.map(

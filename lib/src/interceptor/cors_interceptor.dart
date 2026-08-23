@@ -10,18 +10,34 @@ const _kAccessControlExposeHeaders = 'access-control-expose-headers';
 const _kAccessControlMaxAge = 'access-control-max-age';
 
 class CorsInterceptor extends Interceptor {
-  CorsInterceptor(super.data, {required super.config, super.route})
-    : _additionalHeaders = data.params[kParamAdditionalHeaders] ?? const [],
-      _credentials = Interceptor.parseBool(
-        data.params[kParamCredentials],
-        defaultsTo: false,
-      ),
-      _exposeHeaders = data.params[kParamExposeHeaders] ?? const [],
-      _headers = data.params[kParamExposeHeaders] ?? _kDefaultHeaders,
-      _maxAge =
-          Interceptor.maybeParseNum<int>(data.params[kParamMaxAge]) ??
-          const Duration(hours: 24).inSeconds,
-      _methods = data.params[kParamMethods];
+  CorsInterceptor({
+    required this.additionalHeaders,
+    required super.config,
+    required this.credentials,
+    required this.exposeHeaders,
+    required this.headers,
+    required this.maxAge,
+    required this.methods,
+  }) : super(InterceptorType.cors);
+
+  factory CorsInterceptor.builder({
+    required ServerConfig config,
+    Map<String, dynamic>? params,
+    ReServeRoute? route,
+  }) => CorsInterceptor(
+    additionalHeaders: params?[kParamAdditionalHeaders] ?? const [],
+    config: config,
+    credentials: Interceptor.parseBool(
+      params?[kParamCredentials],
+      defaultsTo: false,
+    ),
+    exposeHeaders: params?[kParamExposeHeaders] ?? const [],
+    headers: params?[kParamExposeHeaders] ?? _kDefaultHeaders,
+    maxAge:
+        Interceptor.maybeParseNum<int>(params?[kParamMaxAge]) ??
+        const Duration(hours: 24).inSeconds,
+    methods: params?[kParamMethods],
+  );
 
   static const kParamAdditionalHeaders = 'additional-headers';
   static const kParamCredentials = 'allow-credentials';
@@ -29,7 +45,6 @@ class CorsInterceptor extends Interceptor {
   static const kParamHeaders = 'allow-headers';
   static const kParamMaxAge = 'max-age';
   static const kParamMethods = 'allow-methods';
-  static const kType = 'cors';
 
   static const _kDefaultHeaders = [
     'accept',
@@ -42,18 +57,18 @@ class CorsInterceptor extends Interceptor {
     'user-agent',
   ];
 
-  final List<String> _additionalHeaders;
-  final bool _credentials;
-  final List<String> _exposeHeaders;
-  final List<String> _headers;
-  final int _maxAge;
-  final List<String> _methods;
+  final List<String> additionalHeaders;
+  final bool credentials;
+  final List<String> exposeHeaders;
+  final List<String> headers;
+  final int maxAge;
+  final List<String> methods;
 
   @override
   (ReServeRequest, ReServeResponse?) interceptRequest(ReServeRequest request) {
     ReServeResponse? response;
 
-    final origin = request.headers.where((h) => h.key == 'origin').firstOrNull;
+    final origin = request.headers['origin'];
     if (origin != null && request.method == 'OPTIONS') {
       response = _alterResponse(request);
     }
@@ -77,48 +92,46 @@ class CorsInterceptor extends Interceptor {
       statusCode: 200,
     );
 
-    final origin = request.headers.where((h) => h.key == 'origin').firstOrNull;
+    final origin = request.headers['origin'];
     if (origin != null) {
       final rh = RemoveHeadersInterceptor(
-        InterceptorData(
-          type: RemoveHeadersInterceptor.kType,
-          params: {
-            RemoveHeadersInterceptor.kParamHeaders: [
-              _kAccessControlAllowCredentials,
-              _kAccessControlAllowHeaders,
-              _kAccessControlAllowMethods,
-              _kAccessControlAllowOrigin,
-              _kAccessControlExposeHeaders,
-              _kAccessControlMaxAge,
-            ],
-          },
-        ),
         config: config,
+        headers: [
+          _kAccessControlAllowCredentials,
+          _kAccessControlAllowHeaders,
+          _kAccessControlAllowMethods,
+          _kAccessControlAllowOrigin,
+          _kAccessControlExposeHeaders,
+          _kAccessControlMaxAge,
+        ],
       );
       response = rh.interceptResponse(request, response);
 
-      response.headers.addAll([
+      final headers = List<ReServeHeader>.from(response.headers.all);
+      headers.addAll([
         ReServeHeader(
           key: _kAccessControlAllowCredentials,
-          value: _credentials.toString(),
+          value: credentials.toString(),
         ),
-        for (final h in [..._headers, ..._additionalHeaders])
+        for (final h in [...this.headers, ...additionalHeaders])
           ReServeHeader(
             key: _kAccessControlAllowHeaders,
             value: h.toLowerCase(),
           ),
-        for (final m in _methods)
+        for (final m in methods)
           ReServeHeader(
             key: _kAccessControlAllowMethods,
             value: m.toLowerCase(),
           ),
-        for (final h in _exposeHeaders)
+        for (final h in exposeHeaders)
           ReServeHeader(
             key: _kAccessControlExposeHeaders,
             value: h.toLowerCase(),
           ),
-        ReServeHeader(key: _kAccessControlMaxAge, value: _maxAge.toString()),
+        ReServeHeader(key: _kAccessControlMaxAge, value: maxAge.toString()),
       ]);
+
+      response = response.copyWith(headers: headers);
     }
     return response;
   }

@@ -15,7 +15,7 @@ class ServerConfig {
     Map<String, dynamic>? headers,
     List<InterceptorData> interceptors = const [],
     this.https,
-    this.log = ReServeLoggerLevel.info,
+    this.log = ReServeLoggerLevel.config,
     this.port = 5433,
     this.proxy,
     required this.routes,
