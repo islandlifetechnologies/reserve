@@ -1,6 +1,6 @@
 # ReServe
 
-![ReServe](assets/banner-800w.jpeg)
+![ReServe](https://raw.githubusercontent.com/islandlifetechnologies/reserve/main/assets/banner-800w.jpeg)
 
 **Table of Contents**
 
