@@ -19,5 +19,6 @@ jobs:
         shell: bash
         run: |
           dart pub get
+          dart run build_runner build
           dart format --set-exit-if-changed lib test
           dart analyze
