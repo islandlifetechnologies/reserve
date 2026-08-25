@@ -56,6 +56,7 @@ The ReServe configuration has a search path. It utilizes a search path to locate
 
 1. If a `config` param is set, the file passed in that parameter.
 1. `reserve.yaml` in the current directory.
+1. `web_dev_config.yaml` in the current directory, utilizing the `reserve` key.
 1. `pubspec_overrides.yaml` in the current directory, utilizing the `reserve` key.
 1. `pubspec.yaml` in the current directory, utilizing the `reserve` key.
 
