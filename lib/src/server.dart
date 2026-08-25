@@ -19,7 +19,7 @@ class Server {
 
     final https = config.https;
     if (https != null) {
-      security = await https.getSecurityContext();
+      security = https.getSecurityContext();
       _logger.info('Utilizing HTTPS.');
     }
 
