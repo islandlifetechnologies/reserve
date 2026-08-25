@@ -4,7 +4,7 @@ homepage: 'https://github.com/islandlifetechnologies/reserve'
 version: 1.0.0
 
 executables: 
-  reserve: bin/reserve.dart
+  reserve: reserve.dart
 
 environment:
   sdk: ^3.12.0
