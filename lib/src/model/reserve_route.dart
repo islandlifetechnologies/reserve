@@ -11,10 +11,8 @@ class ReServeRoute {
     Map<String, dynamic>? headers,
     this.interceptors = const [],
     this.name,
-    this.origin,
     String? path,
     required this.redirect,
-    this.redirectIp,
   }) {
     if (path != null) {
       this.path = path;
@@ -27,20 +25,19 @@ class ReServeRoute {
   final ReServeLoggerLevel log;
   final List<InterceptorData> interceptors;
   final String? name;
-  final Uri? origin;
   final Uri redirect;
-  final String? redirectIp;
 
   @JsonKey(includeFromJson: false)
   List<Interceptor>? _interceptors;
+
   @JsonKey(includeFromJson: false)
   late Logger _logger;
 
   @JsonKey(includeFromJson: false)
-  Logger get logger => _logger;
+  late String _path;
 
   @JsonKey(includeFromJson: false)
-  late String _path;
+  Logger get logger => _logger;
 
   String get path => _path;
   set path(String path) {

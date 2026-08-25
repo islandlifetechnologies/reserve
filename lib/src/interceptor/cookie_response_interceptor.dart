@@ -36,9 +36,12 @@ class CookieResponseInterceptor extends ResponseInterceptor {
       final cookie = ReServeCookie.fromCookie(
         Cookie.fromSetCookieValue(header.value),
       );
+
+      final host = config.origin?.host ?? config.host;
+
       cookies.add(
         cookie.copyWith(
-          domain: cookie.domain == null ? null : '.${config.host}',
+          domain: cookie.domain == null ? null : '.$host',
           secure: allowSecure ? cookie.secure : false,
         ),
       );

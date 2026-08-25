@@ -17,6 +17,7 @@ class ReServeHandler {
   }
 
   final ServerConfig config;
+
   final ReServeRoute route;
 
   late final String path;
@@ -39,8 +40,8 @@ class ReServeHandler {
         'host':
             '${route.redirect.host}${[443, 80].contains(route.redirect.port) ? '' : ':${route.redirect.port}'}',
       },
+      response: false,
     ),
-    RedirectResponseInterceptor(config: config, route: route),
   ];
 
   /// The path to check against.  The past must not start with a '/' and if it
@@ -84,8 +85,10 @@ class ReServeHandler {
       if (redirectPath.startsWith('/')) {
         redirectPath = redirectPath.substring(1);
       }
+
+      final query = req.uri.hasQuery ? '?${req.uri.query}' : '';
       final uri = Uri.parse(
-        '${route.redirect.scheme}://${route.redirect.host}${[80, 443].contains(route.redirect.port) ? '' : ':${route.redirect.port}'}/$redirectPath',
+        '${route.redirect.scheme}://${route.redirect.host}${[80, 443].contains(route.redirect.port) ? '' : ':${route.redirect.port}'}/$redirectPath$query',
       );
       response = await switch (req.method) {
         'DELETE' => client.delete(uri, headers: req.headers.toMap()),

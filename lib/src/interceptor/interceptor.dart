@@ -12,16 +12,14 @@ typedef InterceptorBuilder =
     });
 
 enum InterceptorType {
-  cache('cache', CacheInterceptor.builder),
   cookie('cookie', CookieResponseInterceptor.builder),
   cors('cors', CorsInterceptor.builder),
-  redirect('redirect', RedirectResponseInterceptor.builder),
 
   @JsonValue('remove-headers')
   removeHeaders('remove-headers', RemoveHeadersInterceptor.builder),
 
   @JsonValue('replace-body')
-  replaceBody('replace-body', ReplaceBodyInterceptor.builder),
+  replaceBody('replace-body', ReplaceBodyResponseInterceptor.builder),
 
   @JsonValue('replace-headers')
   replaceHeaders('replace-headers', ReplaceHeadersInterceptor.builder),
@@ -109,9 +107,7 @@ abstract class Interceptor {
       path = '/$path';
     }
 
-    final result = Uri.parse(
-      '${config.https == null ? 'http' : 'https'}://${config.host}${[80, 443].contains(config.port) ? '' : ':${config.port}'}$path',
-    );
+    final result = Uri.parse('${config.entrypoint}$path');
 
     return result.toString();
   }

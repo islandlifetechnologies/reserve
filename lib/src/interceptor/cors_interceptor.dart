@@ -1,5 +1,3 @@
-import 'dart:typed_data';
-
 import 'package:reserve/reserve.dart';
 
 const _kAccessControlAllowCredentials = 'access-control-allow-credentials';
@@ -57,6 +55,15 @@ class CorsInterceptor extends Interceptor {
     'user-agent',
   ];
 
+  static const kDefaultMethods = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+  ];
+
   final List<String> additionalHeaders;
   final bool credentials;
   final List<String> exposeHeaders;
@@ -80,17 +87,13 @@ class CorsInterceptor extends Interceptor {
   ReServeResponse interceptResponse(
     ReServeRequest request,
     ReServeResponse response,
-  ) => _alterResponse(request);
+  ) => _alterResponse(request, response: response);
 
   ReServeResponse _alterResponse(
-    ReServeRequest request, [
+    ReServeRequest request, {
     ReServeResponse? response,
-  ]) {
-    response ??= ReServeResponse(
-      bytes: Uint8List(0),
-      headers: [],
-      statusCode: 200,
-    );
+  }) {
+    response ??= ReServeResponse.empty();
 
     final origin = request.headers['origin'];
     if (origin != null) {
@@ -113,21 +116,19 @@ class CorsInterceptor extends Interceptor {
           key: _kAccessControlAllowCredentials,
           value: credentials.toString(),
         ),
-        for (final h in [...this.headers, ...additionalHeaders])
-          ReServeHeader(
-            key: _kAccessControlAllowHeaders,
-            value: h.toLowerCase(),
-          ),
-        for (final m in methods)
-          ReServeHeader(
-            key: _kAccessControlAllowMethods,
-            value: m.toLowerCase(),
-          ),
-        for (final h in exposeHeaders)
-          ReServeHeader(
-            key: _kAccessControlExposeHeaders,
-            value: h.toLowerCase(),
-          ),
+        ReServeHeader(
+          key: _kAccessControlAllowHeaders,
+          value: <String>{...this.headers, ...additionalHeaders}.join(','),
+        ),
+        ReServeHeader(
+          key: _kAccessControlAllowMethods,
+          value: methods.join(','),
+        ),
+        ReServeHeader(key: _kAccessControlAllowOrigin, value: origin),
+        ReServeHeader(
+          key: _kAccessControlExposeHeaders,
+          value: exposeHeaders.join(','),
+        ),
         ReServeHeader(key: _kAccessControlMaxAge, value: maxAge.toString()),
       ]);
 

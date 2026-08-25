@@ -6,17 +6,61 @@ import 'package:args/args.dart';
 
 void main(List<String> args) {
   final parser = ArgParser()
-    ..addOption('common-name', abbr: 'c', defaultsTo: 'localhost')
-    ..addOption('expires', abbr: 'e', defaultsTo: '30y')
-    ..addOption('locality', abbr: 'l', defaultsTo: 'Woonsocket')
+    ..addOption(
+      'common-name',
+      abbr: 'c',
+      defaultsTo: 'localhost.direct',
+      help:
+          "The common name to write into the certificate's identity.  This should match the dmoain name.",
+    )
+    ..addOption(
+      'expires',
+      abbr: 'e',
+      defaultsTo: '30y',
+      help:
+          'The amount of time before the certificate expires.  End with "y" for years or "d" for days.',
+    )
+    ..addOption(
+      'keypass',
+      abbr: 'k',
+      help: 'The password to use for the private key.',
+    )
+    ..addOption(
+      'locality',
+      abbr: 'l',
+      defaultsTo: 'Woonsocket',
+      help: "The locality (city) to write to the certificate's identity.",
+    )
     ..addOption('organization', abbr: 'o', defaultsTo: 'CVS Health')
     ..addOption('ou', abbr: 'u', defaultsTo: 'https://cvs.com')
-    ..addOption('path', abbr: 'p', defaultsTo: 'cert')
-    ..addOption('state', abbr: 's', defaultsTo: 'RI')
-    ..addFlag('dry-run');
+    ..addOption(
+      'path',
+      abbr: 'p',
+      defaultsTo: 'cert',
+      help: 'The path to write the certificate and private key to.',
+    )
+    ..addOption(
+      'state',
+      abbr: 's',
+      defaultsTo: 'RI',
+      help: "The state to embed in the certificate's identity.",
+    )
+    ..addFlag(
+      'dry-run',
+      help: 'Shows the openssl command to be run but does not execute it.',
+      negatable: false,
+    )
+    ..addFlag('help', abbr: 'h', negatable: false);
   final parsed = parser.parse(args);
 
+  final help = parsed['help'] == true;
+  if (help) {
+    print('Usage: dart tool/create_cert.dart');
+    print(parser.usage);
+    exit(0);
+  }
   final dryRun = parsed['dry-run'] == true;
+  final keypass = parsed['keypass'];
 
   int days;
   final dayStr = parsed['expires'] as String;
@@ -35,16 +79,20 @@ void main(List<String> args) {
     'req',
     '-x509',
     '-newkey',
-    'rsa:4096',
+    ...['ec', '-pkeyopt', 'ec_paramgen_curve:secp384r1', '-nodes'],
+
+    // 'rsa:4096',
     '-keyout',
     '${parsed['path']}/${parsed['common-name']}.key',
     '-out',
     '${parsed['path']}/${parsed['common-name']}.crt',
     '-days',
     '$days',
+    if (keypass != null) ...['-passout', 'pass:$keypass'],
     '-noenc',
     '-subj',
     '/C=US/ST=${parsed['state']}/L=${parsed['locality']}/O=${parsed['organization']}/OU=${parsed['ou']}/CN=${parsed['common-name']}',
+    '-sha384',
     '-addext',
     'subjectAltName=DNS:${parsed['common-name']},IP:127.0.0.1"',
   ];

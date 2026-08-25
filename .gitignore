@@ -46,7 +46,7 @@ app.*.map.json
 
 lib/generated/
 cert/
-config.yaml
+reserve.yaml
 bin/debug.dart
 
 # Below this line, don't include in .pubignore

@@ -1,7 +1,7 @@
 name: 'reserve'
 description: 'Server that can forward requests from one location to another while reprocessing the responses.'
 homepage: 'https://github.com/islandlifetechnologies/reserve'
-version: 1.0.0-alpha0
+version: 1.0.0
 
 executables: 
   reserve: bin/reserve.dart
@@ -19,7 +19,6 @@ dependencies:
   logging: ^1.3.0
   meta: ^1.18.0
   shelf: ^1.4.2
-  template_expressions: ^4.2.0
   yaon: ^2.0.2
 
 dev_dependencies:

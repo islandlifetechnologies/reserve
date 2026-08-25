@@ -1,3 +1,3 @@
 ## 1.0.0
 
-- Initial Release
+- Initial Beta Release: API stable but documentation and tests in flight

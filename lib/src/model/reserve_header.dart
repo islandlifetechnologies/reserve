@@ -1,4 +1,6 @@
-class ReServeHeaders {
+import 'dart:collection';
+
+class ReServeHeaders extends MapBase<String, String> {
   ReServeHeaders(Iterable<ReServeHeader> all) : all = List.from(all);
 
   /// Splits the grouped headers from the given mapping of header keys to their
@@ -27,8 +29,23 @@ class ReServeHeaders {
 
   final List<ReServeHeader> all;
 
-  String? operator [](String name) =>
-      all.where((h) => name == h.key).firstOrNull?.value;
+  @override
+  String? operator [](Object? key) =>
+      all.where((h) => key == h.key).firstOrNull?.value;
+
+  @override
+  void operator []=(String key, String value) =>
+      throw UnsupportedError('Header map is immutable.');
+
+  @override
+  Iterable<String> get keys => Set<String>.from(all.map((h) => h.key));
+
+  @override
+  void clear() => throw UnsupportedError('Header map is immutable.');
+
+  @override
+  String? remove(Object? key) =>
+      throw UnsupportedError('Header map is immutable.');
 
   Map<String, String> toMap() {
     final result = <String, String>{};

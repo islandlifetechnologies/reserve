@@ -2,18 +2,18 @@ import 'dart:convert';
 
 import 'package:reserve/reserve.dart';
 
-class ReplaceBodyInterceptor extends ResponseInterceptor {
-  ReplaceBodyInterceptor({
+class ReplaceBodyResponseInterceptor extends ResponseInterceptor {
+  ReplaceBodyResponseInterceptor({
     required super.config,
     required this._from,
     required this._replace,
   }) : super(InterceptorType.replaceBody);
 
-  factory ReplaceBodyInterceptor.builder({
+  factory ReplaceBodyResponseInterceptor.builder({
     required ServerConfig config,
     Map<String, dynamic>? params,
     ReServeRoute? route,
-  }) => ReplaceBodyInterceptor(
+  }) => ReplaceBodyResponseInterceptor(
     config: config,
     from: params![kParamFrom],
     replace: params[kParamReplace],

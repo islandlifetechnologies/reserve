@@ -16,6 +16,7 @@ class ServerConfig {
     List<InterceptorData> interceptors = const [],
     this.https,
     this.log = ReServeLoggerLevel.config,
+    this.origin,
     this.port = 5433,
     this.proxy,
     required this.routes,
@@ -36,6 +37,7 @@ class ServerConfig {
   final String host;
   final SslData? https;
   late final List<Interceptor> interceptors;
+  final Uri? origin;
   final ReServeLoggerLevel log;
 
   @JsonKey(includeFromJson: false)
@@ -54,4 +56,8 @@ class ServerConfig {
 
     return IOClient(httpClient);
   }
+
+  String get entrypoint => origin == null
+      ? ('${https == null ? 'http' : 'https'}://$host${[80, 443].contains(port) ? '' : ':$port'}')
+      : origin!.toString();
 }

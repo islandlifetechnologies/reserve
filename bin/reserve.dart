@@ -22,22 +22,47 @@ void main(List<String> args) async {
     Logger.root.level = Level.ALL;
 
     final parser = ArgParser()
-      ..addOption(
-        'config',
-        abbr: 'c',
-        help: 'Path to the configuration file.',
-        defaultsTo: 'pubspec.yaml',
-      )
+      ..addOption('config', abbr: 'c', help: 'Path to the configuration file.')
       ..addFlag('watch', defaultsTo: true);
 
     final parsed = parser.parse(args);
 
-    final configFile = File(parsed['config']);
-    if (!configFile.existsSync()) {
+    final searchPath = [
+      ('config.yaml', null),
+      ('pubspec_overrides.yaml', 'reserve'),
+      ('pubspec.yaml', 'reserve'),
+    ];
+    final configArg = parsed['config']?.toString();
+    if (configArg != null) {
+      searchPath.insert(0, (configArg, null));
+    }
+
+    (File, String?)? found;
+
+    for (final (path, prefix) in searchPath) {
+      final file = File(path);
+      if (file.existsSync()) {
+        try {
+          final contents = yaon.parse(file.readAsStringSync());
+          if (prefix == null || contents[prefix] != null) {
+            found = (file, prefix);
+          }
+        } catch (_) {
+          // no op, try next file
+        }
+        break;
+      }
+    }
+
+    if (found == null) {
       // ignore: avoid_print
-      print('Unable to load configuration file: ${configFile.path}');
+      print(
+        'Unable to find configuration file in search path: ${searchPath.map((entry) => entry.$1)}',
+      );
       exit(1);
     }
+
+    final (configFile, prefix) = found;
 
     Server? server;
     Future<void> restart() async {
@@ -45,7 +70,9 @@ void main(List<String> args) async {
         await server?.stop();
         final contents = yaon.parse(configFile.readAsStringSync());
 
-        final config = ServerConfig.fromJson(contents['reserve'] ?? contents);
+        final config = ServerConfig.fromJson(
+          prefix == null ? contents : contents[prefix],
+        );
 
         server = Server(config: config);
         await server!.start();

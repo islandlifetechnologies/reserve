@@ -5,6 +5,8 @@ class ReplaceHeadersInterceptor extends Interceptor {
     required super.config,
     required this._from,
     required this._replace,
+    this._request = true,
+    this._response = true,
   }) : super(InterceptorType.replaceBody);
 
   factory ReplaceHeadersInterceptor.builder({
@@ -15,16 +17,25 @@ class ReplaceHeadersInterceptor extends Interceptor {
     config: config,
     from: params![kParamFrom],
     replace: params[kParamReplace],
+    request: Interceptor.parseBool(params[kParamRequest], defaultsTo: true),
+    response: Interceptor.parseBool(params[kParamResponse], defaultsTo: true),
   );
 
   static const kParamFrom = 'from';
   static const kParamReplace = 'replace';
+  static const kParamRequest = 'request';
+  static const kParamResponse = 'response';
 
   final String _from;
   final String _replace;
+  final bool _request;
+  final bool _response;
 
   @override
   (ReServeRequest, ReServeResponse?) interceptRequest(ReServeRequest request) {
+    if (!_request) {
+      return (request, null);
+    }
     final result = <ReServeHeader>[];
 
     for (final header in request.headers.all) {
@@ -44,6 +55,9 @@ class ReplaceHeadersInterceptor extends Interceptor {
     ReServeRequest request,
     ReServeResponse response,
   ) {
+    if (!_response) {
+      return response;
+    }
     final result = <ReServeHeader>[];
 
     for (final header in response.headers.all) {
