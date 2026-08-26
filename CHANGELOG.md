@@ -1,3 +1,7 @@
+## 1.1.1
+
+- Bug Fixes
+
 ## 1.1.0
 
 - Added [template_expressions](https://pub.dev/packages/template_expressions) to be able to utilize variables in the config

@@ -10,6 +10,7 @@ class SetResponseRequestInterceptor extends RequestInterceptor {
     required super.config,
     Map headers = const {},
     this._statusCode = 200,
+    String? templateSyntax,
   }) : _headers = Map<String, String>.from(
          headers.map(
            (key, value) => MapEntry<String, String>(
@@ -18,6 +19,7 @@ class SetResponseRequestInterceptor extends RequestInterceptor {
            ),
          ),
        ),
+       _templateSyntax = TemplateSyntax.lookup(templateSyntax).syntax,
        super(InterceptorType.setResponse);
 
   factory SetResponseRequestInterceptor.builder({
@@ -29,15 +31,18 @@ class SetResponseRequestInterceptor extends RequestInterceptor {
     body: params![kParamBody].toString(),
     headers: params[kParamHeaders] ?? const {},
     statusCode: Interceptor.maybeParseNum<int>(params[kParamBody]) ?? 200,
+    templateSyntax: params[kParamTemplateSyntax],
   );
 
   static const kParamBody = 'body';
   static const kParamHeaders = 'headers';
   static const kParamStatusCode = 'status-code';
+  static const kParamTemplateSyntax = 'template-syntax';
 
   final String _body;
   final Map<String, String> _headers;
   final int _statusCode;
+  final ExpressionSyntax _templateSyntax;
 
   @override
   FutureOr<(ReServeRequest, ReServeResponse?)> interceptRequest(
@@ -55,6 +60,7 @@ class SetResponseRequestInterceptor extends RequestInterceptor {
           final body = utf8.decode(bytes);
           final processed = Template(
             body,
+            syntax: [_templateSyntax],
           ).process(context: {'vars': config.vars});
           bytes = utf8.encode(processed);
         } catch (_) {

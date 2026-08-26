@@ -15,6 +15,15 @@ void main() {
       ..writeAsString(
         r'${vars.greeting}: ${vars.config.firstName} ${vars.config.lastName}!',
       );
+    fs.file('output.mustache.html')
+      ..createSync(recursive: true)
+      ..writeAsString(r'''
+{{vars.greeting}}: {{vars.config.firstName}} {{vars.config.lastName}}!
+function foo() {
+  const bar = 'bar';
+  console.log(`${bar}`);
+}
+''');
     FileSystemFunctions.fileSystemOverride = fs;
   });
 
@@ -42,6 +51,37 @@ void main() {
     );
 
     expect(utf8.decode(response!.bytes), 'Hello: Mickey Mouse!');
+    expect(response.headers, {'content-type': 'text/html'});
+    expect(response.statusCode, 200);
+  });
+
+  test('set-response: mustache', () async {
+    final config = ServerConfig(
+      routes: const {},
+      vars: {
+        'greeting': 'Hello',
+        'config': {'firstName': 'Mickey', 'lastName': 'Mouse'},
+      },
+    );
+
+    final interceptor = SetResponseRequestInterceptor(
+      body: 'output.mustache.html',
+      config: config,
+      headers: {'content-type': 'text/html'},
+      templateSyntax: 'mustache',
+    );
+
+    final (_, response) = await interceptor.interceptRequest(
+      ReServeRequest.empty(),
+    );
+
+    expect(utf8.decode(response!.bytes), r'''
+Hello: Mickey Mouse!
+function foo() {
+  const bar = 'bar';
+  console.log(`${bar}`);
+}
+''');
     expect(response.headers, {'content-type': 'text/html'});
     expect(response.statusCode, 200);
   });

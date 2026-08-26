@@ -37,17 +37,18 @@ class ServerConfig {
   factory ServerConfig.fromJson(
     Map<String, dynamic> json, {
     required Map<String, dynamic> vars,
-  }) => _$ServerConfigFromJson({'vars': vars, ...json});
+  }) => _$ServerConfigFromJson({...json, 'vars': vars});
 
   factory ServerConfig.fromString(String input) {
     final parsed = yaon.parse(input);
+    final syntax = TemplateSyntax.lookup(parsed['template-syntax']).syntax;
 
     final vars =
         (parsed['vars'] as Map<String, dynamic>? ?? const <String, dynamic>{})
             .map(
               (key, value) => MapEntry<String, dynamic>(
                 key,
-                Template(value.toString()).evaluate(),
+                Template(value.toString(), syntax: [syntax]).evaluate(),
               ),
             );
 
@@ -64,11 +65,14 @@ class ServerConfig {
   @JsonKey(includeFromJson: false)
   late final Logger logger;
 
+  @JsonKey(fromJson: _fromInt)
   final int port;
   final String? proxy;
   final Map<String, ReServeRoute> routes;
-
   final Map<String, dynamic> vars;
+
+  static int _fromInt(dynamic value) =>
+      value is num ? value.toInt() : (int.tryParse(value) ?? 5433);
 
   http.Client get client {
     final httpClient = HttpClient();

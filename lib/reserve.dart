@@ -21,5 +21,6 @@ export 'src/model/reserve_response.dart';
 export 'src/model/reserve_route.dart';
 export 'src/model/server_config.dart';
 export 'src/model/ssl_data.dart';
+export 'src/model/template_syntax.dart';
 //
 export 'src/util/time_provider.dart';

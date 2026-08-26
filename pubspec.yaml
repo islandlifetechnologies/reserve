@@ -1,7 +1,7 @@
 name: 'reserve'
 description: 'Server that can forward requests from one location to another while reprocessing the responses.'
 homepage: 'https://github.com/islandlifetechnologies/reserve'
-version: 1.1.0
+version: 1.1.1
 
 executables: 
   reserve: reserve
