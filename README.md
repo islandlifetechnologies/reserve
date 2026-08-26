@@ -64,6 +64,7 @@ The ReServe configuration has a search path. It utilizes a search path to locate
 
 | Key            | Default     | Example                           | Description                                                                                                                                                    |
 | -------------- | ----------- | --------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `vars`         | _n/a_       | See [Vars](#vars)                 | Variables that can be utilized throughout the config and the [set-response](#set-response) interceptor.                                                        |
 | `host`         | `localhost` | `localhost.direct`                | The host name the server will listen on.                                                                                                                       |
 | `port`         | `5433`      | `8080`                            | The port the server will listen on.                                                                                                                            |
 | `log`          | `config`    | `finest`                          | The log level to emit server level events.                                                                                                                     |
@@ -75,19 +76,24 @@ The ReServe configuration has a search path. It utilizes a search path to locate
 **Example**
 
 ```yaml
-host: localhost
-port: 8080
+vars:
+  api-server: https://api.example.com
+  host: localhost
+  port: 8080
+  web-server: https://www.example.com
+host: ${vars.host}
+port: ${vars.port}
 routes:
   /api/:
     log: fine
-    redirect: https://api.example.com/
+    redirect: ${vars['api-server']}
     interceptors:
       - type: cookie
         with:
           allow-secure: false
   /:
     log: warn
-    redirect: https://www.example.com/
+    redirect: ${vars['web-server']}
     interceptors:
       - type: remove-headers
         with:
@@ -99,8 +105,43 @@ routes:
           allow-secure: false
       - type: replace-body
         with:
-          from: https://api.example.com
-          replace: http://localhost:8080
+          from: ${vars['api-server']}
+          replace: http://${vars.host}:${vars.port}
+```
+
+---
+
+### Vars
+
+A section that contains variables. The viarbles may not reference other variables, however, they can be [template expressions](https://pub.dev/packages/template_expressions).
+
+For example, let's say you have a local configuration file named: `dev_config.yaml`...
+
+```yaml
+api-server: https://api.example.com
+key-not-for-an-api: dEfinateLyN0t@nAp!K3y
+```
+
+... and you want to store that in a variable named "config". To do so, you could create a vars section like:
+
+```yaml
+vars:
+  # yaon.decode() // handles either YAML or JSON seamlessly as an input
+  # File(path).readAsStringSync // Reads a file using the synchronous I/O
+  config: ${yaon.decode(File('dev_config.yaml').readAsStringSync())}
+```
+
+Then if you wanted to reference those entries, you could create a route as follows:
+
+```yaml
+routes:
+  /api/:
+    redirect: ${vars.config['api-server']}
+    interceptors:
+      - type: set-headers
+        with:
+          headers:
+            x-key-not-for-apis: ${vars.config['key-not-for-an-api']}
 ```
 
 ---

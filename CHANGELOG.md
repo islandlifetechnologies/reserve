@@ -1,3 +1,8 @@
+## 1.1.0
+
+- Added [template_expressions](https://pub.dev/packages/template_expressions) to be able to utilize variables in the config
+- Added and documented `vars` section for the config
+
 ## 1.0.1
 
 - Added logging for cookie processing

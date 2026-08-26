@@ -1,7 +1,8 @@
 import 'dart:async';
-import 'dart:io';
+import 'dart:convert';
 
 import 'package:reserve/reserve.dart';
+import 'package:template_expressions/template_expressions.dart';
 
 class SetResponseRequestInterceptor extends RequestInterceptor {
   SetResponseRequestInterceptor({
@@ -42,7 +43,27 @@ class SetResponseRequestInterceptor extends RequestInterceptor {
   FutureOr<(ReServeRequest, ReServeResponse?)> interceptRequest(
     ReServeRequest request,
   ) async {
-    final bytes = File(_body).readAsBytesSync();
+    final fs = FileSystemFunctions.fileSystem;
+    final textTypes = ['text/', 'application/json', 'application/yaml'];
+    var bytes = fs.file(_body).readAsBytesSync();
+
+    final contentType =
+        _headers['content-type']?.toString() ?? 'application/octet-stream';
+    for (final type in textTypes) {
+      if (contentType.startsWith(type)) {
+        try {
+          final body = utf8.decode(bytes);
+          final processed = Template(
+            body,
+          ).process(context: {'vars': config.vars});
+          bytes = utf8.encode(processed);
+        } catch (_) {
+          logger.warning(
+            'For file: $_body, encountered text type but could not decode to text.',
+          );
+        }
+      }
+    }
 
     final response = ReServeResponse(
       bytes: bytes,

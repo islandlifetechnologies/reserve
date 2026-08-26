@@ -137,8 +137,8 @@ void main(List<String> args) async {
         logger.config('File change detected, shutting down server.');
         await server?.stop();
         final contents = yaon.parse(configFile.readAsStringSync());
-        final config = ServerConfig.fromJson(
-          prefix == null ? contents : contents[prefix],
+        final config = ServerConfig.fromString(
+          json.encode(prefix == null ? contents : contents[prefix]),
         );
         logger.config('Configuration successfully reloaded.');
 
