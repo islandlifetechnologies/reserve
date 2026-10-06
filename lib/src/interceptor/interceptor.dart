@@ -4,16 +4,17 @@ import 'package:json_annotation/json_annotation.dart';
 import 'package:logging/logging.dart';
 import 'package:reserve/reserve.dart';
 
-typedef InterceptorBuilder =
-    Interceptor Function({
-      required ServerConfig config,
-      Map<String, dynamic>? params,
-      ReServeRoute? route,
-    });
+typedef InterceptorBuilder = Interceptor Function({
+  required ServerConfig config,
+  Map<String, dynamic>? params,
+  ReServeRoute? route,
+});
 
 enum InterceptorType {
   cookie('cookie', CookieResponseInterceptor.builder),
   cors('cors', CorsInterceptor.builder),
+
+  exit('exit', ExitInterceptor.builder),
 
   @JsonValue('remove-headers')
   removeHeaders('remove-headers', RemoveHeadersInterceptor.builder),
@@ -101,6 +102,11 @@ abstract class Interceptor {
 
   String replaceUrl(String url, {required ReServeRoute route}) {
     final routeTo = route.redirect;
+    if (routeTo == null) {
+      throw ReServeException(
+        body: 'Error, not redirect found for route: ${route.path}',
+      );
+    }
 
     var path = routeTo.path;
     if (!path.startsWith('/')) {

@@ -3,6 +3,7 @@ export 'src/exception/reserve_exception.dart';
 //
 export 'src/interceptor/cookie_response_interceptor.dart';
 export 'src/interceptor/cors_interceptor.dart';
+export 'src/interceptor/exit_interceptor.dart';
 export 'src/interceptor/interceptor.dart';
 export 'src/interceptor/remove_headers_interceptor.dart';
 export 'src/interceptor/replace_body_response_interceptor.dart';

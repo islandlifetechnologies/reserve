@@ -1,3 +1,8 @@
+## 1.1.2
+
+- Made redirect optional and provided error messages when not set but needed.
+- Added `exit` interceptor
+
 ## 1.1.1
 
 - Bug Fixes

@@ -12,7 +12,7 @@ class ReServeRoute {
     this.interceptors = const [],
     this.name,
     String? path,
-    required this.redirect,
+    this.redirect,
   }) {
     if (path != null) {
       this.path = path;
@@ -25,7 +25,7 @@ class ReServeRoute {
   final ReServeLoggerLevel log;
   final List<InterceptorData> interceptors;
   final String? name;
-  final Uri redirect;
+  final Uri? redirect;
 
   @JsonKey(includeFromJson: false)
   List<Interceptor>? _interceptors;

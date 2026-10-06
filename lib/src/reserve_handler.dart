@@ -38,7 +38,7 @@ class ReServeHandler {
       config: config,
       headers: {
         'host':
-            '${route.redirect.host}${[443, 80].contains(route.redirect.port) ? '' : ':${route.redirect.port}'}',
+            '${route.redirect!.host}${[443, 80].contains(route.redirect!.port) ? '' : ':${route.redirect!.port}'}',
       },
       response: false,
     ),
@@ -70,6 +70,17 @@ class ReServeHandler {
         }
       }
 
+      // the interceptors did not define a response, if no redirect is
+      // defined in the route, throw an exception
+
+      final redirect = route.redirect;
+      if (redirect == null) {
+        throw ReServeException(
+          body:
+              'No response defined by interceptors and no redirect defined in route: ${route.path}',
+          statusCode: 500,
+        );
+      }
       late final http.Response response;
 
       final client = config.client;
@@ -81,14 +92,14 @@ class ReServeHandler {
       if (redirectPath.startsWith('/')) {
         redirectPath = redirectPath.substring(1);
       }
-      redirectPath = '${route.redirect.path}/$redirectPath';
+      redirectPath = '${redirect.path}/$redirectPath';
       if (redirectPath.startsWith('/')) {
         redirectPath = redirectPath.substring(1);
       }
 
       final query = req.uri.hasQuery ? '?${req.uri.query}' : '';
       final uri = Uri.parse(
-        '${route.redirect.scheme}://${route.redirect.host}${[80, 443].contains(route.redirect.port) ? '' : ':${route.redirect.port}'}/$redirectPath$query',
+        '${redirect.scheme}://${redirect.host}${[80, 443].contains(redirect.port) ? '' : ':${redirect.port}'}/$redirectPath$query',
       );
       response = await switch (req.method) {
         'DELETE' => client.delete(uri, headers: req.headers.toMap()),
