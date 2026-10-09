@@ -4,8 +4,12 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:args/args.dart';
+import 'package:dart_console/dart_console.dart';
 import 'package:embed_annotation/embed_annotation.dart';
+import 'package:file/file.dart';
+import 'package:file/local.dart';
 import 'package:logging/logging.dart';
+import 'package:pub_updater/pub_updater.dart';
 import 'package:reserve/reserve.dart';
 import 'package:reserve/src/server.dart';
 import 'package:yaon/yaon.dart';
@@ -17,6 +21,8 @@ const pubspec = _$pubspec;
 
 void main(List<String> args) async {
   hierarchicalLoggingEnabled = true;
+  final fs = LocalFileSystem();
+
   try {
     Logger.root.onRecord.listen((record) {
       print('${record.time}: ${record.level}: ${record.message}');
@@ -97,7 +103,7 @@ void main(List<String> args) async {
     (File, String?)? found;
 
     for (final (path, prefix) in searchPath) {
-      final file = File(path);
+      final file = fs.file(path);
       if (file.existsSync()) {
         logger.fine('Looking for configuration in file: ${file.path}');
         try {
@@ -136,14 +142,28 @@ void main(List<String> args) async {
       try {
         logger.config('File change detected, shutting down server.');
         await server?.stop();
-        final contents = yaon.parse(configFile.readAsStringSync());
-        final config = ServerConfig.fromString(
-          json.encode(prefix == null ? contents : contents[prefix]),
-        );
+
+        final config = ServerConfig.fromFile(configFile, prefix: prefix);
         logger.config('Configuration successfully reloaded.');
 
         server = Server(config: config);
         await server!.start();
+
+        final puck = PubUpdater();
+
+        final latest = await puck.getLatestVersion(pubspec.name);
+
+        if (latest != pubspec.version) {
+          final table = Table()
+            ..insertColumn(header: 'Update Available')
+            ..insertColumn(header: 'Current Version')
+            ..insertColumn(header: 'Latest Version')
+            ..insertRows([
+              ['A new update is available!', pubspec.version, latest],
+            ]);
+          print(table);
+          print('To upgrade: dart pub global activate ${pubspec.name}');
+        }
       } catch (e, stack) {
         print('Error starting server\n$e\n$stack');
       }

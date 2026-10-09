@@ -15,8 +15,8 @@ class ReplaceBodyResponseInterceptor extends ResponseInterceptor {
     ReServeRoute? route,
   }) => ReplaceBodyResponseInterceptor(
     config: config,
-    from: params![kParamFrom],
-    replace: params[kParamReplace],
+    from: (params?[kParamFrom] ?? '').toString(),
+    replace: (params?[kParamReplace] ?? '').toString(),
   );
 
   static const kParamFrom = 'from';

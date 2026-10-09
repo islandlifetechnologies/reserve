@@ -1,6 +1,11 @@
+## 1.2.0
+
+- Updated so that set_response paths are relative to the config path rather than the current path
+- Added automated update checker
+
 ## 1.1.2
 
-- Made redirect optional and provided error messages when not set but needed.
+- Made redirect optional and provided error messages when not set but needed
 - Added `exit` interceptor
 
 ## 1.1.1

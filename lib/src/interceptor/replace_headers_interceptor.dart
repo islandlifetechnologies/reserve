@@ -7,7 +7,7 @@ class ReplaceHeadersInterceptor extends Interceptor {
     required this._replace,
     this._request = true,
     this._response = true,
-  }) : super(InterceptorType.replaceBody);
+  }) : super(InterceptorType.replaceHeaders);
 
   factory ReplaceHeadersInterceptor.builder({
     required ServerConfig config,
@@ -15,10 +15,10 @@ class ReplaceHeadersInterceptor extends Interceptor {
     ReServeRoute? route,
   }) => ReplaceHeadersInterceptor(
     config: config,
-    from: params![kParamFrom],
-    replace: params[kParamReplace],
-    request: Interceptor.parseBool(params[kParamRequest], defaultsTo: true),
-    response: Interceptor.parseBool(params[kParamResponse], defaultsTo: true),
+    from: (params?[kParamFrom] ?? '').toString(),
+    replace: (params?[kParamReplace] ?? '').toString(),
+    request: Interceptor.parseBool(params?[kParamRequest], defaultsTo: true),
+    response: Interceptor.parseBool(params?[kParamResponse], defaultsTo: true),
   );
 
   static const kParamFrom = 'from';

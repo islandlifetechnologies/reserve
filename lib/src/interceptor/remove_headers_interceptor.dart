@@ -17,9 +17,9 @@ class RemoveHeadersInterceptor extends Interceptor {
     ReServeRoute? route,
   }) => RemoveHeadersInterceptor(
     config: config,
-    headers: params!['headers'] as Iterable,
-    request: Interceptor.parseBool(params[kParamRequest], defaultsTo: true),
-    response: Interceptor.parseBool(params[kParamResponse], defaultsTo: true),
+    headers: (params?[kParamHeaders] as Iterable? ?? const []),
+    request: Interceptor.parseBool(params?[kParamRequest], defaultsTo: true),
+    response: Interceptor.parseBool(params?[kParamResponse], defaultsTo: true),
   );
 
   static const kParamHeaders = 'headers';

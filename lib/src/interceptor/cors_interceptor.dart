@@ -23,18 +23,34 @@ class CorsInterceptor extends Interceptor {
     Map<String, dynamic>? params,
     ReServeRoute? route,
   }) => CorsInterceptor(
-    additionalHeaders: params?[kParamAdditionalHeaders] ?? const [],
+    additionalHeaders:
+        (params?[kParamAdditionalHeaders] as Iterable?)
+            ?.map((e) => e.toString())
+            .toList() ??
+        const [],
     config: config,
     credentials: Interceptor.parseBool(
       params?[kParamCredentials],
       defaultsTo: false,
     ),
-    exposeHeaders: params?[kParamExposeHeaders] ?? const [],
-    headers: params?[kParamExposeHeaders] ?? _kDefaultHeaders,
+    exposeHeaders:
+        (params?[kParamExposeHeaders] as Iterable?)
+            ?.map((e) => e.toString())
+            .toList() ??
+        const [],
+    headers:
+        (params?[kParamHeaders] as Iterable?)
+            ?.map((e) => e.toString())
+            .toList() ??
+        _kDefaultHeaders,
     maxAge:
         Interceptor.maybeParseNum<int>(params?[kParamMaxAge]) ??
         const Duration(hours: 24).inSeconds,
-    methods: params?[kParamMethods],
+    methods:
+        (params?[kParamMethods] as Iterable?)
+            ?.map((e) => e.toString())
+            .toList() ??
+        kDefaultMethods,
   );
 
   static const kParamAdditionalHeaders = 'additional-headers';

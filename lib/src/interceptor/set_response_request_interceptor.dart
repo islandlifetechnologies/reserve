@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:file/chroot.dart';
+import 'package:path/path.dart' as p;
 import 'package:reserve/reserve.dart';
 import 'package:template_expressions/template_expressions.dart';
 
@@ -28,10 +30,11 @@ class SetResponseRequestInterceptor extends RequestInterceptor {
     ReServeRoute? route,
   }) => SetResponseRequestInterceptor(
     config: config,
-    body: params![kParamBody].toString(),
-    headers: params[kParamHeaders] ?? const {},
-    statusCode: Interceptor.maybeParseNum<int>(params[kParamBody]) ?? 200,
-    templateSyntax: params[kParamTemplateSyntax],
+    body: (params?[kParamBody] ?? '').toString(),
+    headers: (params?[kParamHeaders] as Map?) ?? const {},
+    statusCode:
+        Interceptor.maybeParseNum<int>(params?[kParamStatusCode]) ?? 200,
+    templateSyntax: params?[kParamTemplateSyntax]?.toString(),
   );
 
   static const kParamBody = 'body';
@@ -48,7 +51,13 @@ class SetResponseRequestInterceptor extends RequestInterceptor {
   FutureOr<(ReServeRequest, ReServeResponse?)> interceptRequest(
     ReServeRequest request,
   ) async {
-    final fs = FileSystemFunctions.fileSystem;
+    final fs = ChrootFileSystem(
+      config.fileSystem,
+      config.fileSystem.path.rootPrefix(
+        config.fileSystem.currentDirectory.absolute.path,
+      ),
+    );
+    fs.currentDirectory = p.dirname(config.path);
     final textTypes = ['text/', 'application/json', 'application/yaml'];
     var bytes = fs.file(_body).readAsBytesSync();
 

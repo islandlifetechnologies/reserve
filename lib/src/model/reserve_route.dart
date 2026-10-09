@@ -42,6 +42,7 @@ class ReServeRoute {
   String get path => _path;
   set path(String path) {
     _path = path;
+    hierarchicalLoggingEnabled = true;
     _logger = Logger(path);
     _logger.level = log.level;
   }

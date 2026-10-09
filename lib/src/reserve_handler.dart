@@ -34,14 +34,15 @@ class ReServeHandler {
         'transfer-encoding',
       ],
     ),
-    SetHeadersInterceptor(
-      config: config,
-      headers: {
-        'host':
-            '${route.redirect!.host}${[443, 80].contains(route.redirect!.port) ? '' : ':${route.redirect!.port}'}',
-      },
-      response: false,
-    ),
+    if (route.redirect != null)
+      SetHeadersInterceptor(
+        config: config,
+        headers: {
+          'host':
+              '${route.redirect!.host}${[443, 80].contains(route.redirect!.port) ? '' : ':${route.redirect!.port}'}',
+        },
+        response: false,
+      ),
   ];
 
   /// The path to check against.  The past must not start with a '/' and if it

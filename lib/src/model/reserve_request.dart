@@ -13,7 +13,7 @@ class ReServeRequest {
     DateTime? timestamp,
   }) : headers = ReServeHeaders(headers),
        method = method.toUpperCase(),
-       timestamp = DateTime.now();
+       timestamp = timestamp ?? DateTime.now();
 
   factory ReServeRequest.empty() => ReServeRequest(
     bytes: Uint8List(0),
@@ -46,7 +46,7 @@ class ReServeRequest {
   final DateTime timestamp;
   final Uri uri;
 
-  String get path => '/${uri.path}';
+  String get path => uri.path.startsWith('/') ? uri.path : '/${uri.path}';
 
   ReServeRequest copyWith({
     Uint8List? bytes,
